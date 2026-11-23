@@ -1,0 +1,198 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Cinerama</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="~/css/cartelera.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold text-danger" asp-controller="Cartelera" asp-action="Index">
+                🎬 CINERAMA
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContenido">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarContenido">
+                <form method="get" asp-controller="Cartelera" asp-action="Index" id="formFiltros" class="d-flex mx-auto my-2 my-lg-0 gap-2 align-items-center">
+
+                    <select name="ciudad" id="selectCiudad" class="form-select form-select-sm bg-dark text-white border-secondary" onchange="cargarCinesPorCiudad()">
+                        <option value="">Todas las Ciudades</option>
+                        @if (ViewBag.Ciudades != null)
+                        {
+                            foreach (var c in ViewBag.Ciudades)
+                            {
+                                var selected = ViewBag.CiudadSeleccionada == c ? "selected" : null;
+                                <!option value="@c" @selected>@c</!option>
+                            }
+                        }
+                    </select>
+
+                    <select name="idCine" id="selectCine" class="form-select form-select-sm bg-dark text-white border-secondary" onchange="document.getElementById('formFiltros').submit()">
+                        <option value="">Todos los Cines</option>
+                        @if (ViewBag.Cines != null)
+                        {
+                            foreach (var cine in ViewBag.Cines)
+                            {
+                                var selected = ViewBag.IdCineSeleccionado == cine.IdCine ? "selected" : null;
+                                <!option value="@cine.IdCine" @selected>@cine.Nombre</!option>
+                            }
+                        }
+                    </select>
+
+                </form>
+
+                <script>
+                    async function cargarCinesPorCiudad() {
+                        const ciudad = document.getElementById('selectCiudad').value;
+                        const comboCine = document.getElementById('selectCine');
+
+                        comboCine.innerHTML = '<option value="">Cargando cines...</option>';
+
+                        try {
+                            const response = await fetch(`/Cartelera/ObtenerCinesPorCiudad?ciudad=${encodeURIComponent(ciudad)}`);
+                            const cines = await response.json();
+
+                            comboCine.innerHTML = '<option value="">Todos los Cines</option>';
+                            cines.forEach(cine => {
+                                const option = document.createElement('option');
+                                option.value = cine.idCine || cine.IdCine;
+                                option.textContent = cine.nombre || cine.Nombre;
+                                comboCine.appendChild(option);
+                            });
+
+                            document.getElementById('formFiltros').submit();
+                        } catch (error) {
+                            console.error('Error al cargar cines:', error);
+                            comboCine.innerHTML = '<option value="">Todos los Cines</option>';
+                        }
+                    }
+                </script>
+
+                <div class="d-flex align-items-center" id="seccionUsuarioNavbar">
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <a asp-controller="Cuenta" asp-action="MiCuenta" class="btn btn-outline-light btn-sm me-2">
+                            👤 Mi Cuenta (@User.Identity.Name)
+                        </a>
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline" id="formLogoutReal">
+                           <button type="submit" class="btn btn-sm btn-danger">Salir</button>
+                        </form> 
+                    }
+                    else
+                    {
+                        <a href="/Venta/Identificacion" id="btnNavLogin" class="btn btn-danger btn-sm px-3 fw-bold" onclick="guardarPaginaYRedirigir(event)">
+                            Iniciar Sesión
+                        </a>
+
+                        <div id="bloqueInvitado" class="d-none align-items-center gap-2">
+                            <span class="text-white fw-bold me-2">🎟️ Invitado</span>
+                            <a href="/Venta/Identificacion" id="btnLoginDesdeInvitado" class="btn btn-danger btn-sm px-3 fw-bold" onclick="guardarPaginaYRedirigir(event)">
+                                Iniciar Sesión
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        @RenderBody()
+    </main>
+
+    <footer class="pt-4 pb-3 mt-5 border-top border-secondary">
+        <div class="container text-center">
+            <div class="d-flex justify-content-center flex-wrap gap-4 mb-3 fw-semibold">
+                <a href="#sobre-nosotros">Sobre Nosotros</a>
+                <span class="text-secondary">|</span>
+                <a href="#oficinas">Oficinas</a>
+                <span class="text-secondary">|</span>
+                <a href="#contacto">Contacto</a>
+            </div>
+
+            <div class="d-flex justify-content-center gap-3 fs-4 mb-3">
+                <a href="#" class="text-white"><i class="bi bi-facebook"></i></a>
+                <a href="#" class="text-white"><i class="bi bi-instagram"></i></a>
+                <a href="#" class="text-white"><i class="bi bi-tiktok"></i></a>
+                <a href="#" class="text-white"><i class="bi bi-youtube"></i></a>
+            </div>
+
+            <hr class="border-secondary mx-auto w-50" />
+
+            <p class="small mb-0 text-secondary">
+                © @DateTime.Now.Year CINERAMA Perú. Todos los derechos reservados.
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                verificarEstadoInvitadoNavbar();
+
+                const formLogout = document.getElementById("formLogoutReal");
+                if (formLogout) {
+                    formLogout.addEventListener("submit", limpiarSessionStorageAntesDeSalir);
+                }
+            });
+
+                        function limpiarSessionStorageAntesDeSalir(e) {
+                e.preventDefault();
+
+                sessionStorage.removeItem("tipoUsuario");
+                sessionStorage.removeItem("returnUrl");
+                sessionStorage.removeItem("asientosIds");
+                sessionStorage.removeItem("idFuncion");
+                sessionStorage.removeItem("montoTotal");
+
+                fetch("/Account/Logout", { method: "POST" })
+                    .then(() => {
+                        window.location.reload();
+                    })
+                    .catch(err => {
+                        console.error("Error al cerrar sesión:", err);
+                        window.location.reload();
+                    });
+            }
+
+            function verificarEstadoInvitadoNavbar() {
+                const btnLogin = document.getElementById("btnNavLogin");
+                if (!btnLogin) return;
+
+                const bloqueInvitado = document.getElementById("bloqueInvitado");
+                const tipoUsuario = sessionStorage.getItem("tipoUsuario");
+
+                if (tipoUsuario === "Invitado") {
+                    btnLogin.classList.add("d-none");
+                    if (bloqueInvitado) {
+                        bloqueInvitado.classList.remove("d-none");
+                        bloqueInvitado.classList.add("d-flex");
+                    }
+                } else {
+                    btnLogin.classList.remove("d-none");
+                    if (bloqueInvitado) {
+                        bloqueInvitado.classList.add("d-none");
+                        bloqueInvitado.classList.remove("d-flex");
+                    }
+                }
+            }
+
+            function guardarPaginaYRedirigir(e) {
+                e.preventDefault();
+                sessionStorage.setItem("returnUrl", window.location.href);
+                window.location.href = "/Venta/Identificacion";
+            }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>  | 

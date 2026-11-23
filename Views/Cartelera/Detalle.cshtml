@@ -1,0 +1,66 @@
+﻿@model CineramaWebApp.Models.ViewModels.DetallePeliculaViewModel
+
+@{
+    ViewData["Title"] = Model.Pelicula.Titulo + " - Cinerama";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/cartelera.css" asp-append-version="true" />
+}
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <partial name="_DetallePeliculaCard" model="Model.Pelicula" />
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-lg border-secondary bg-dark text-white rounded-3 overflow-hidden">
+
+                <div class="bg-danger text-white p-3 d-flex justify-content-between align-items-center">
+                    <h4 class="fw-bold mb-0 text-white">
+                        @(Model.IdCineSeleccionado == 0 ? "1. Elige tu cine" : "2. Selecciona Horario")
+                    </h4>
+
+                    <a asp-controller="Cartelera"
+                       asp-action="Index"
+                       asp-route-idCine="@Model.IdCineSeleccionado"
+                       asp-route-ciudad="@Model.CiudadSeleccionada"
+                       class="btn btn-link text-white text-decoration-none fs-4 fw-bold p-0 lh-1"
+                       title="Volver a la cartelera principal">
+                        ✕
+                    </a>
+                </div>
+
+                <div class="p-4">
+                    @if (Model.IdCineSeleccionado == 0)
+                    {
+                        <partial name="_Paso1SeleccionarCine" model="Model" />
+                    }
+                    else
+                    {
+                        <partial name="_Paso2SeleccionarHorario" model="Model" />
+                    }
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="datosPelicula"
+     data-idpelicula="@Model.Pelicula.IdPelicula"
+     data-idcine="@Model.IdCineSeleccionado"
+     data-ciudad="@Model.CiudadSeleccionada"
+     style="display:none;"></div>
+
+@section Scripts {
+    <script>
+        function cambiarFecha(fechaStr) {
+            const elData = document.getElementById('datosPelicula');
+            const idPelicula = elData.dataset.idpelicula;
+            const idCine = elData.dataset.idcine;
+            const ciudad = elData.dataset.ciudad;
+            window.location.href = `/Cartelera/Detalle?id=${idPelicula}&idCine=${idCine}&ciudad=${encodeURIComponent(ciudad)}&fecha=${fechaStr}`;
+        }
+    </script>
+}
